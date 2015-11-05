@@ -16,4 +16,5 @@
     <string name="connection_time_out_text">Connection Timed Out\nPlease Try Again</string>
     <string name="bluetooth_enabled_text">Bluetooth Enabled</string>
     <string name="no_device_selected_text">No Device Selected</string>
+    <string name="check_food_supply_button">Check Food Supply</string>
 </resources>
