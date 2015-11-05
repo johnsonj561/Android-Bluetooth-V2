@@ -12,13 +12,19 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import java.util.ArrayList;
 import java.util.Set;
 
-
+/**
+ * Activity that appends all paired Bluetooth devices to array adapter
+ * Displays all paired devices to user for selection
+ */
 public class ViewDevicesActivity extends ListActivity{
 
+    /**
+     * OnCreate() initializes Bluetooth adapter and constructs listview
+     * @param savedInstanceState No persistent data at this time
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
