@@ -64,41 +64,25 @@
         />
 
     <Button
-        android:id="@+id/ledOnButton"
-        android:layout_width="100dp"
+        android:id="@+id/viewFoodSupply"
+        android:layout_width="250dp"
         android:layout_height="wrap_content"
-        android:text="@string/led_on_button"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="50dp"
-        android:layout_below="@id/connectBluetoothDevice"
-        android:layout_marginTop="10dp"
-        android:visibility="invisible"
-        android:background="#00CC00"
-        />
-
-    <Button
-        android:id="@+id/ledOffButton"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:text="@string/led_off_button"
-        android:layout_alignParentRight="true"
-        android:layout_marginRight="50dp"
-        android:layout_below="@id/connectBluetoothDevice"
-        android:layout_marginTop="10dp"
-        android:visibility="invisible"
-        android:background="#CC0000"
-        />
-
-    <Button
-        android:id="@+id/ledFlashButton"
-        android:layout_width="150dp"
-        android:layout_height="wrap_content"
-        android:text="@string/led_flash_button"
+        android:text="@string/check_food_supply_button"
         android:layout_centerHorizontal="true"
-        android:layout_below="@id/ledOffButton"
+        android:layout_below="@id/disconnectBluetoothDevice"
+        android:layout_marginTop="30dp"
+        android:visibility="invisible"
+        />
+
+    <Button
+        android:id="@+id/addFood"
+        android:layout_width="250dp"
+        android:layout_height="wrap_content"
+        android:text="Add Food"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/viewFoodSupply"
         android:layout_marginTop="10dp"
         android:visibility="invisible"
-        android:background="#FFCC00"
         />
 
 </RelativeLayout>
