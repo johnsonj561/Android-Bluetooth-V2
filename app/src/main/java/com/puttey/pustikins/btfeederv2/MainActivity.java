@@ -1,3 +1,10 @@
+/**
+ * Justin Johnson
+ * Fall 2015
+ * Embedded Systems Design Course
+ * Bluetooth Feeder Application designed to communicate with MSP430 via Bluetooth to program
+ * and control an automated pet feeder
+ */
 package com.puttey.pustikins.btfeederv2;
 
 import android.app.Activity;
@@ -11,7 +18,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-
+//Bluetoothspp Library - https://github.com/akexorcist/Android-BluetoothSPPLibrary
 import app.akexorcist.bluetotohspp.library.BluetoothSPP;
 import app.akexorcist.bluetotohspp.library.BluetoothSPP.BluetoothConnectionListener;
 import app.akexorcist.bluetotohspp.library.BluetoothSPP.OnDataReceivedListener;
@@ -31,9 +38,8 @@ public class MainActivity extends Activity {
     Button viewDevicesButton;
     Button connectDeviceButton;
     Button disconnectDeviceButton;
-    Button ledOnButton;
-    Button ledOffButton;
-    Button ledFlashButton;
+    Button updateFoodSupplyButton;
+    Button addFoodButton;
     //TextViews
     TextView statusTextView;
     //Local members
@@ -42,7 +48,10 @@ public class MainActivity extends Activity {
     Boolean ledOn = false;
 
 
-
+    /**
+     * Initialize Bluetooth object during onCreate()
+     * @param savedInstanceState Used for data persistence. No data being saved at this time
+     */
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -59,37 +68,30 @@ public class MainActivity extends Activity {
         }
 
 
-
+        /**
+         * Handle incoming Bluetooth messages from MSP403
+         * Changes value of Status TextView to the incoming message
+         * This assumes incoming data is formatted appropriately
+         */
         mBluetoothSPP.setOnDataReceivedListener(new OnDataReceivedListener(){
             public void onDataReceived(byte[] data, String message){
                 Log.i("DATA RECEIVED", message);
-                switch (message){
-                    case "A":
-                        statusTextView.setText(message);
-                        break;
-                    case "B":
-                        statusTextView.setText(message);
-                        break;
-                    case "F":
-                        statusTextView.setText(message);
-                        break;
-                    default:
-                        statusTextView.setText(message);
-                        break;
-                }
+                statusTextView.setText(message);
             }
         });
 
+        /**
+         * Acts on Blutooth connection and disconnection events accordingly
+         */
         mBluetoothSPP.setBluetoothConnectionListener(new BluetoothConnectionListener(){
             public void onDeviceDisconnected(){
                 menu.clear();
                 getMenuInflater().inflate(R.menu.menu_connection, menu);
                 statusTextView.setText("Select A Device To Begin");
                 disconnectDeviceButton.setVisibility(View.INVISIBLE);
-                ledOnButton.setVisibility(View.INVISIBLE);
-                ledOffButton.setVisibility(View.INVISIBLE);
-                ledFlashButton.setVisibility(View.INVISIBLE);
                 viewDevicesButton.setVisibility(View.VISIBLE);
+                updateFoodSupplyButton.setVisibility(View.INVISIBLE);
+                addFoodButton.setVisibility(View.INVISIBLE);
             }
 
             public void onDeviceConnectionFailed(){
@@ -102,20 +104,29 @@ public class MainActivity extends Activity {
                 statusTextView.setText("Connected To\n" + selectedDevice);
                 connectDeviceButton.setVisibility(View.INVISIBLE);
                 disconnectDeviceButton.setVisibility(View.VISIBLE);
-                ledOnButton.setVisibility(View.VISIBLE);
-                ledOffButton.setVisibility(View.VISIBLE);
-                ledFlashButton.setVisibility(View.VISIBLE);
                 viewDevicesButton.setVisibility(View.INVISIBLE);
+                updateFoodSupplyButton.setVisibility(View.VISIBLE);
+                addFoodButton.setVisibility(View.VISIBLE);
             }
         });
     }
 
+    /**
+     * Inflate appropriate menu for display
+     * @param menu
+     * @return
+     */
     public boolean onCreateOptionsMenu(Menu menu) {
         this.menu = menu;
         getMenuInflater().inflate(R.menu.menu_connection, menu);
         return true;
     }
 
+    /**
+     * Handle Menu Item Selections
+     * @param item  The menu item selected
+     * @return
+     */
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if(id == R.id.menu_android_connect) {
@@ -139,11 +150,20 @@ public class MainActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * An application destroy - end Bluetooth connection service
+     */
     public void onDestroy() {
         super.onDestroy();
         mBluetoothSPP.stopService();
     }
 
+    /**
+     * On application start
+     * Check if Bluetooth is enabled
+     * Launch Bluetooth Enable activity if Necessary
+     * Start Bluetooth Service for non-mobile device communication (MSP430)
+     */
     public void onStart() {
         super.onStart();
         if (!mBluetoothSPP.isBluetoothEnabled()) {
@@ -163,6 +183,9 @@ public class MainActivity extends Activity {
         }
     }
 
+    /**
+     * Initialize Buttons and OnClick Listeners
+     */
     public void setup() {
         enableBluetoothButton = (Button) findViewById(R.id.enableBluetoothButton);
         enableBluetoothButton.setOnClickListener(new View.OnClickListener(){
@@ -178,6 +201,7 @@ public class MainActivity extends Activity {
                 }
             }
         });
+
         viewDevicesButton = (Button) findViewById(R.id.viewDevicesButton);
         viewDevicesButton.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -207,49 +231,44 @@ public class MainActivity extends Activity {
             }
         });
 
-        ledOnButton = (Button) findViewById(R.id.ledOnButton);
-        ledOnButton.setOnClickListener(new View.OnClickListener(){
+        //Update Food Supply button sends 0x57 = 'W' to check weight sensor value
+        updateFoodSupplyButton = (Button) findViewById(R.id.viewFoodSupply);
+        updateFoodSupplyButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
                 if(!ledOn){
-                    Log.i("LED ON BUTTON", selectedMacAddress);
-                    mBluetoothSPP.send(new byte[] {0x41}, true);
-                    ledOn = true;
+                    Log.i("VIEW FOOD SUPPLY", selectedMacAddress);
+                    mBluetoothSPP.send(new byte[] {0x57}, true);
                 }
             }
         });
-
-        ledOffButton = (Button) findViewById(R.id.ledOffButton);
-        ledOffButton.setOnClickListener(new View.OnClickListener(){
+        //Add Food Button sends 0x46 = 'F' to signal MSP430 to dispense food
+        addFoodButton = (Button) findViewById(R.id.addFood);
+        addFoodButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
-                if(ledOn){
-                    Log.i("LED OFF BUTTON", selectedMacAddress);
-                    mBluetoothSPP.send(new byte[]{0x42}, true);
-                    ledOn = false;
-                }
+                Log.i("ADD FOOD", selectedDevice);
+                mBluetoothSPP.send(new byte[] {0x46}, true);
             }
         });
-
-        ledFlashButton = (Button) findViewById(R.id.ledFlashButton);
-        ledFlashButton.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v){
-                Log.i("LED FLASH BUTTON", selectedMacAddress);
-                mBluetoothSPP.send(new byte[]{0x46}, true);
-                ledOn = true;
-            }
-        });
-
+        //TextView to display current status
         statusTextView = (TextView) findViewById(R.id.statusText);
 
     }
 
+    /**
+     * Handle Activity callbacks
+     * @param requestCode Corresponds to the Activity called to distinguish which callback to handle
+     * @param resultCode RESULT_OK or RESULT_CANCEL represents success/failed activity
+     * @param data Additional information from Activity
+     */
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        //Connect Device callback
         if(requestCode == BluetoothState.REQUEST_CONNECT_DEVICE) {
             if(resultCode == Activity.RESULT_OK)
                 mBluetoothSPP.connect(data);
         }
+        //Enable Bluetooth callback
         else if(requestCode == BluetoothState.REQUEST_ENABLE_BT) {
             if(resultCode == Activity.RESULT_OK) {
                 mBluetoothSPP.setupService();
@@ -262,6 +281,7 @@ public class MainActivity extends Activity {
                 finish();
             }
         }
+        //Enable Bluetooth callback
         else if (requestCode == REQUEST_ENABLE_BT){
             if (resultCode == RESULT_CANCELED){
                 Toast.makeText(getApplicationContext(), getString(R.string.connection_time_out_text),
@@ -273,6 +293,7 @@ public class MainActivity extends Activity {
                 viewDevicesButton.setVisibility(View.VISIBLE);
             }
         }
+        //Select Bluetooth Device callback
         else if (requestCode == REQUEST_BT_DEVICE){
             if (resultCode == RESULT_OK){
                 selectedDevice = data.getStringExtra("bluetoothDevice");
