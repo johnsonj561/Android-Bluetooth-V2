@@ -10,29 +10,43 @@ package com.puttey.pustikins.btfeederv2;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-//Bluetoothspp Library - https://github.com/akexorcist/Android-BluetoothSPPLibrary
+
 import app.akexorcist.bluetotohspp.library.BluetoothSPP;
 import app.akexorcist.bluetotohspp.library.BluetoothSPP.BluetoothConnectionListener;
 import app.akexorcist.bluetotohspp.library.BluetoothSPP.OnDataReceivedListener;
 import app.akexorcist.bluetotohspp.library.BluetoothState;
 import app.akexorcist.bluetotohspp.library.DeviceList;
 
+//Bluetoothspp Library - https://github.com/akexorcist/Android-BluetoothSPPLibrary
+
 public class MainActivity extends Activity {
+
     //Intent Constants for OnActivityResult callback
     private final int REQUEST_ENABLE_BT = 1;
     private final int REQUEST_BT_DEVICE = 2;
+    //Bowl reading constants to display food supply
+    private final String EMPTY_BOWL = "B0";
+    private final String PERCENT_25_BOWL = "B25";
+    private final String PERCENT_50_BOWL = "B50";
+    private final String PERCENT_75_BOWL = "B75";
+    private final String FULL_BOWL = "B100";
+    //Hopper reading constants to display hopper supply
+    private final String EMPTY_HOPPER = "H0";
+
     //Bluetooth adapter object
     BluetoothSPP mBluetoothSPP;
-    //Menus
-    Menu menu;
+
+
     //Buttons
     Button enableBluetoothButton;
     Button viewDevicesButton;
@@ -42,6 +56,8 @@ public class MainActivity extends Activity {
     Button addFoodButton;
     //TextViews
     TextView statusTextView;
+    //ImageView
+    ImageView bowlImage;
     //Local members
     String selectedDevice;
     String selectedMacAddress;
@@ -76,7 +92,46 @@ public class MainActivity extends Activity {
         mBluetoothSPP.setOnDataReceivedListener(new OnDataReceivedListener(){
             public void onDataReceived(byte[] data, String message){
                 Log.i("DATA RECEIVED", message);
-                statusTextView.setText(message);
+                if(message.contains(EMPTY_HOPPER)){
+                    Toast.makeText(getApplicationContext(),"Hopper Low\nRefill Soon", Toast.LENGTH_SHORT).show();
+                }
+                if(message.contains(EMPTY_BOWL)){
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        bowlImage.setImageDrawable(getResources().getDrawable(R.drawable.empty_bowl, getApplicationContext().getTheme()));
+                    } else {
+                        bowlImage.setImageDrawable(getResources().getDrawable(R.drawable.empty_bowl));
+                    }
+                }else if(message.contains(PERCENT_25_BOWL)){
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        bowlImage.setImageDrawable(getResources().getDrawable(R.drawable.twentyfivepercentbowl, getApplicationContext().getTheme()));
+                    } else {
+                        bowlImage.setImageDrawable(getResources().getDrawable(R.drawable.twentyfivepercentbowl));
+                    }
+                }else if(message.contains(PERCENT_50_BOWL)){
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        bowlImage.setImageDrawable(getResources().getDrawable(R.drawable.fiftypercentbowl, getApplicationContext().getTheme()));
+                    } else {
+                        bowlImage.setImageDrawable(getResources().getDrawable(R.drawable.fiftypercentbowl));
+                    }
+                }else if(message.contains(PERCENT_75_BOWL)){
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        bowlImage.setImageDrawable(getResources().getDrawable(R.drawable.seventyfivepercentbowl, getApplicationContext().getTheme()));
+                    } else {
+                        bowlImage.setImageDrawable(getResources().getDrawable(R.drawable.seventyfivepercentbowl));
+                    }
+                }else if(message.contains(FULL_BOWL)){
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        bowlImage.setImageDrawable(getResources().getDrawable(R.drawable.full_bowl, getApplicationContext().getTheme()));
+                    } else {
+                        bowlImage.setImageDrawable(getResources().getDrawable(R.drawable.full_bowl));
+                    }
+                }else{
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        bowlImage.setImageDrawable(getResources().getDrawable(R.drawable.not_connected_bowl, getApplicationContext().getTheme()));
+                    } else {
+                        bowlImage.setImageDrawable(getResources().getDrawable(R.drawable.not_connected_bowl));
+                    }
+                }
             }
         });
 
@@ -85,13 +140,16 @@ public class MainActivity extends Activity {
          */
         mBluetoothSPP.setBluetoothConnectionListener(new BluetoothConnectionListener(){
             public void onDeviceDisconnected(){
-                menu.clear();
-                getMenuInflater().inflate(R.menu.menu_connection, menu);
-                statusTextView.setText("Select A Device To Begin");
+                statusTextView.setText("Connect A Device To Begin");
                 disconnectDeviceButton.setVisibility(View.INVISIBLE);
                 viewDevicesButton.setVisibility(View.VISIBLE);
                 updateFoodSupplyButton.setVisibility(View.INVISIBLE);
                 addFoodButton.setVisibility(View.INVISIBLE);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    bowlImage.setImageDrawable(getResources().getDrawable(R.drawable.not_connected_bowl, getApplicationContext().getTheme()));
+                } else {
+                    bowlImage.setImageDrawable(getResources().getDrawable(R.drawable.not_connected_bowl));
+                }
             }
 
             public void onDeviceConnectionFailed(){
@@ -99,14 +157,14 @@ public class MainActivity extends Activity {
             }
 
             public void onDeviceConnected(String name, String address){
-                menu.clear();
-                getMenuInflater().inflate(R.menu.menu_disconnection, menu);
-                statusTextView.setText("Connected To\n" + selectedDevice);
+                statusTextView.setText("Bluetooth Connected");
                 connectDeviceButton.setVisibility(View.INVISIBLE);
                 disconnectDeviceButton.setVisibility(View.VISIBLE);
                 viewDevicesButton.setVisibility(View.INVISIBLE);
                 updateFoodSupplyButton.setVisibility(View.VISIBLE);
                 addFoodButton.setVisibility(View.VISIBLE);
+                //request food supply to dispay appropriate bowl to user
+                mBluetoothSPP.send(new byte[]{0x57}, true);
             }
         });
     }
@@ -117,7 +175,6 @@ public class MainActivity extends Activity {
      * @return
      */
     public boolean onCreateOptionsMenu(Menu menu) {
-        this.menu = menu;
         getMenuInflater().inflate(R.menu.menu_connection, menu);
         return true;
     }
@@ -226,7 +283,7 @@ public class MainActivity extends Activity {
         disconnectDeviceButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
-                Log.i("In Disconnect Button", selectedMacAddress);
+             //   Log.i("In Disconnect Button", selectedMacAddress);
                 mBluetoothSPP.disconnect();
             }
         });
@@ -237,7 +294,7 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v){
                 if(!ledOn){
-                    Log.i("VIEW FOOD SUPPLY", selectedMacAddress);
+                //    Log.i("VIEW FOOD SUPPLY", selectedMacAddress);
                     mBluetoothSPP.send(new byte[] {0x57}, true);
                 }
             }
@@ -253,7 +310,8 @@ public class MainActivity extends Activity {
         });
         //TextView to display current status
         statusTextView = (TextView) findViewById(R.id.statusText);
-
+        //ImageView to display bowl food supply
+        bowlImage = (ImageView) findViewById(R.id.bowlImageView);
     }
 
     /**
@@ -298,7 +356,7 @@ public class MainActivity extends Activity {
             if (resultCode == RESULT_OK){
                 selectedDevice = data.getStringExtra("bluetoothDevice");
                 selectedMacAddress = data.getStringExtra("macAddress");
-                statusTextView.setText("Device Selected\n" + selectedDevice);
+                statusTextView.setText("Device Selected " + selectedDevice);
                 connectDeviceButton.setVisibility(View.VISIBLE);
                 Log.i("DEVICE RETURNED", selectedDevice);
                 Log.i("MAC Address", selectedMacAddress);
